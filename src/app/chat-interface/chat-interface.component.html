@@ -1,0 +1,151 @@
+<div class="flex-1 flex flex-col bg-gray-50">
+  <div class="flex-1 p-8 overflow-y-auto">
+    <ng-container
+      *ngIf="!showUpload && !showViewer && !showAnalysis && !showChat"
+    >
+      <h2 class="text-2xl font-bold mb-6">
+        Welcome to Building Energy Analysis
+      </h2>
+      <div class="grid grid-cols-3 gap-6">
+        <div
+          *ngFor="let feature of features"
+          class="bg-white rounded-xl shadow-sm p-6 space-y-4"
+        >
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-blue-100 rounded-lg">
+              <lucide-icon
+                [name]="feature.icon"
+                class="w-6 h-6 text-blue-600"
+              ></lucide-icon>
+            </div>
+            <h3 class="text-lg font-semibold">{{ feature.title }}</h3>
+          </div>
+          <p class="text-gray-600">{{ feature.description }}</p>
+          <ul class="space-y-2">
+            <li
+              *ngFor="let example of feature.examples"
+              class="flex items-center gap-2 text-sm text-gray-500"
+            >
+              <lucide-icon
+                [name]="Zap"
+                size="14"
+                class="text-blue-500"
+              ></lucide-icon>
+              {{ example }}
+            </li>
+          </ul>
+          <button
+            (click)="feature.action()"
+            class="w-full mt-4 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+          >
+            Get Started
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <div *ngIf="showUpload" class="max-w-2xl mx-auto">
+      <div class="flex items-center gap-2 mb-6">
+        <button (click)="goBack()" class="text-blue-600 hover:text-blue-800">
+          <lucide-icon [name]="ArrowLeft" size="24"></lucide-icon>
+        </button>
+        <h2 class="text-2xl font-bold">Upload Building Documents</h2>
+      </div>
+      <app-file-upload (fileUpload)="onFileUpload($event)"></app-file-upload>
+    </div>
+
+    <div *ngIf="showViewer">
+      <div class="flex items-center gap-2 mb-6">
+        <button (click)="goBack()" class="text-blue-600 hover:text-blue-800">
+          <lucide-icon [name]="ArrowLeft" size="24"></lucide-icon>
+        </button>
+        <h2 class="text-2xl font-bold">3D Building Viewer</h2>
+      </div>
+      <app-building-viewer></app-building-viewer>
+    </div>
+
+    <div *ngIf="showAnalysis">
+      <div class="flex items-center gap-2 mb-6">
+        <button (click)="goBack()" class="text-blue-600 hover:text-blue-800">
+          <lucide-icon [name]="ArrowLeft" size="24"></lucide-icon>
+        </button>
+        <h2 class="text-2xl font-bold">Energy Analysis Results</h2>
+      </div>
+      <app-analysis-results
+        [results]="mockAnalysisResults"
+      ></app-analysis-results>
+    </div>
+
+    <!-- Redesigned Chat Section: Full Width, AI Left, User Right -->
+    <div *ngIf="showChat" class="flex-1 flex flex-col w-full">
+      <div class="flex items-center gap-2 mb-6">
+        <button (click)="goBack()" class="text-blue-600 hover:text-blue-800">
+          <lucide-icon [name]="ArrowLeft" size="24"></lucide-icon>
+        </button>
+        <h2 class="text-2xl font-bold">{{ selectedProject }} Chat</h2>
+      </div>
+      <div
+        class="flex-1 bg-white rounded-xl shadow-md p-6 overflow-y-auto space-y-6 w-full"
+      >
+        <!-- Added w-full -->
+        <div
+          *ngFor="let chat of dummyChats[selectedProject || '']"
+          class="flex {{
+            chat.sender === 'AI' ? 'justify-start' : 'justify-end'
+          }}"
+        >
+          <div
+            class="flex items-start gap-3 max-w-2xl {{
+              chat.sender === 'AI' ? 'flex-row' : 'flex-row-reverse'
+            }}"
+          >
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm {{
+                chat.sender === 'AI' ? 'bg-blue-500' : 'bg-gray-400'
+              }}"
+            >
+              {{ chat.sender === "AI" ? "AI" : "U" }}
+            </div>
+            <div class="flex flex-col">
+              <div
+                class="flex items-baseline gap-2 {{
+                  chat.sender === 'AI' ? 'flex-row' : 'flex-row-reverse'
+                }}"
+              >
+                <span
+                  class="font-semibold {{
+                    chat.sender === 'AI' ? 'text-blue-600' : 'text-gray-700'
+                  }}"
+                  >{{ chat.sender }}</span
+                >
+                <span class="text-xs text-gray-400">{{ chat.timestamp }}</span>
+              </div>
+              <div
+                class="mt-1 p-3 rounded-lg {{
+                  chat.sender === 'AI'
+                    ? 'bg-blue-50 text-blue-900'
+                    : 'bg-gray-100 text-gray-900'
+                }}"
+              >
+                {{ chat.message }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-4 bg-white border-t border-gray-200">
+    <div class="relative">
+      <input
+        type="text"
+        placeholder="Ask questions about your building analysis..."
+        class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      />
+      <button class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600">
+        <lucide-icon [name]="Send" size="20"></lucide-icon>
+      </button>
+    </div>
+  </div>
+</div>

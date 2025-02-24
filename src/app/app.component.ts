@@ -1,12 +1,34 @@
+// app.component.ts
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { SignUpFormComponent } from './sign-up-form/sign-up-form.component';
+import { SidebarComponent } from './sidebar/sidebar.component';
+import { ChatInterfaceComponent } from './chat-interface/chat-interface.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [
+    SignUpFormComponent,
+    CommonModule,
+    SidebarComponent,
+    ChatInterfaceComponent,
+  ],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-  title = 'grad-ui';
+  showSignUp = true;
+
+  onSignUpComplete() {
+    this.showSignUp = false;
+  }
+
+  onProjectSelected(project: string) {
+    const chatInterface = this.chatInterface;
+    if (chatInterface) {
+      chatInterface.onProjectSelected(project);
+    }
+  }
+  chatInterface?: ChatInterfaceComponent;
 }

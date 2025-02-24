@@ -8,6 +8,7 @@ import {
   HelpCircle,
 } from 'lucide-angular';
 import { ChatService } from '../chat-interface/chat.service';
+import { mockChats } from '../chat-interface/mock-data';
 
 @Component({
   selector: 'app-sidebar',
@@ -20,14 +21,7 @@ export class SidebarComponent {
   @Output() projectSelected = new EventEmitter<string>();
   constructor(private chatService: ChatService) {}
 
-  projects = [
-    'Office Building Analysis',
-    'Residential Complex Audit',
-    'Shopping Mall Energy Sim',
-    'Hospital HVAC Analysis',
-    'School Building Review',
-    'Data Center Optimization',
-  ];
+  projects = Object.keys(mockChats);
 
   readonly PlusCircle = PlusCircle;
   readonly FileText = FileText;

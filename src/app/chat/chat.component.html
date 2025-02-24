@@ -24,19 +24,10 @@
 
           <div class="flex flex-col w-full">
             <div
-              class="flex items-center gap-2 {{
-                chat.sender === 'AI' ? 'flex-row' : 'flex-row-reverse'
-              }}"
-            >
-              <span class="text-xs text-gray-500 font-medium">{{
-                chat.timestamp
-              }}</span>
-            </div>
-            <div
               class="mt-1 p-4 rounded-xl shadow-sm {{
                 chat.sender === 'AI'
-                  ? 'bg-blue-50 text-blue-900 border-l-4 border-blue-500'
-                  : 'bg-white text-gray-900 border-r-4 border-gray-400'
+                  ? 'bg-blue-50 text-blue-900'
+                  : 'bg-white text-gray-900'
               }} transition-colors duration-200 hover:shadow-md break-words"
             >
               <p class="text-sm leading-relaxed whitespace-pre-wrap">

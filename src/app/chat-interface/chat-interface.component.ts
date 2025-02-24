@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, FileUp, Zap, ArrowLeft } from 'lucide-angular';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
@@ -40,7 +40,6 @@ export class ChatInterfaceComponent {
     });
   }
 
-  // Initialize features with actions bound to component context
   features: Feature[] = mockFeatures.map((feature) => ({
     ...feature,
     action:

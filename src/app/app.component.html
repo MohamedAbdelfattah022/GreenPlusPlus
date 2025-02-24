@@ -1,9 +1,8 @@
-<!-- <app-sign-up-form
-  *ngIf="showSignUp"
-  (complete)="onSignUpComplete()"
-></app-sign-up-form> -->
-<!-- <div class="flex h-screen bg-gray-50 w-full" *ngIf="!showSignUp"> -->
+@if (showSignUp) {
+<app-sign-up-form (complete)="onSignUpComplete()"></app-sign-up-form>
+} @else {
 <div class="flex bg-gray-50">
   <app-sidebar (projectSelected)="onProjectSelected($event)"></app-sidebar>
-  <app-chat-interface #chatInterface></app-chat-interface>
+  <app-chat-interface #chatInterface class="w-full"></app-chat-interface>
 </div>
+}

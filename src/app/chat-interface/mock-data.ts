@@ -1,24 +1,21 @@
 import { FileText, Building2, Activity } from 'lucide-angular';
 
-// Interface for chat messages
 export interface ChatMessage {
   sender: string;
   message: string;
   timestamp: string;
 }
 
-// Interface for analysis results
 export interface AnalysisResults {
   energyUsage: number;
   recommendations: string[];
   simulationData: { month: string; usage: number }[];
 }
 
-// Interface for features
 export interface Feature {
   title: string;
   description: string;
-  icon: any; // Using 'any' since we're importing Lucide icons
+  icon: any;
   action: () => void;
   examples: string[];
 }
@@ -28,7 +25,7 @@ export const mockFeatures: Feature[] = [
     title: 'File Processing',
     description: 'Upload and analyze building documents',
     icon: FileText,
-    action: () => {}, // Will be overridden in component
+    action: () => {},
     examples: [
       'Upload IDF files for energy simulation',
       'Process building documentation',

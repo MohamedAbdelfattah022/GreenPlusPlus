@@ -18,7 +18,7 @@ import { ChatInterfaceComponent } from './chat-interface/chat-interface.componen
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-  showSignUp = true;
+  showSignUp = false;
 
   onSignUpComplete() {
     this.showSignUp = false;

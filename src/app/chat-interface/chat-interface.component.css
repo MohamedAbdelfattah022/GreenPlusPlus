@@ -1,5 +1,3 @@
 :host {
-  display: block;
-  width: 100%; /* Ensure component takes full width */
-  height: 120%;
+  width: 100%;
 }

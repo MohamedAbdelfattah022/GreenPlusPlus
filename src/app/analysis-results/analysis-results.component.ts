@@ -1,4 +1,3 @@
-// analysis-results.component.ts
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -29,7 +28,6 @@ export class AnalysisResultsComponent {
     simulationData: [],
   };
 
-  // Icon references for template
   readonly Activity = Activity;
   readonly LineChart = LineChart;
   readonly BarChart = BarChart;

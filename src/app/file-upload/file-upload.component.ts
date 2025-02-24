@@ -1,4 +1,3 @@
-// file-upload.component.ts
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Upload, FileType } from 'lucide-angular';
@@ -14,7 +13,6 @@ export class FileUploadComponent {
   @Output() fileUpload = new EventEmitter<File[]>();
   isDragActive = false;
 
-  // Icon references for template
   readonly Upload = Upload;
   readonly FileType = FileType;
 

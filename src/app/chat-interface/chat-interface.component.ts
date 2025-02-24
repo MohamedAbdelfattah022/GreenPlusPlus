@@ -1,110 +1,9 @@
-// // chat-interface.component.ts
-// import { Component } from '@angular/core';
-// import { CommonModule } from '@angular/common';
-// import {
-//   LucideAngularModule,
-//   FileUp,
-//   Building2,
-//   Activity,
-//   Send,
-//   FileText,
-//   Zap,
-//   ArrowLeft, // Added for Back button
-// } from 'lucide-angular';
-// import { FileUploadComponent } from '../file-upload/file-upload.component';
-// import { BuildingViewerComponent } from '../building-viewer/building-viewer.component';
-// import { AnalysisResultsComponent } from '../analysis-results/analysis-results.component';
-
-// @Component({
-//   selector: 'app-chat-interface',
-//   standalone: true,
-//   imports: [
-//     CommonModule,
-//     LucideAngularModule,
-//     FileUploadComponent,
-//     BuildingViewerComponent,
-//     AnalysisResultsComponent,
-//   ],
-//   templateUrl: './chat-interface.component.html',
-//   styleUrls: ['./chat-interface.component.css'],
-// })
-// export class ChatInterfaceComponent {
-//   showUpload = false;
-//   showViewer = false;
-//   showAnalysis = false;
-
-//   features = [
-//     {
-//       title: 'File Processing',
-//       description: 'Upload and analyze building documents',
-//       icon: FileText,
-//       action: () => (this.showUpload = true),
-//       examples: [
-//         'Upload IDF files for energy simulation',
-//         'Process building documentation',
-//         'Extract data from PDFs and drawings',
-//       ],
-//     },
-//     {
-//       title: '3D Visualization',
-//       description: 'Interactive building model viewer',
-//       icon: Building2,
-//       action: () => (this.showViewer = true),
-//       examples: [
-//         'View 3D building models',
-//         'Analyze building components',
-//         'Explore architectural details',
-//       ],
-//     },
-//     {
-//       title: 'Energy Analysis',
-//       description: 'Comprehensive energy performance insights',
-//       icon: Activity,
-//       action: () => (this.showAnalysis = true),
-//       examples: [
-//         'Generate energy audit reports',
-//         'Simulate building performance',
-//         'Get optimization recommendations',
-//       ],
-//     },
-//   ];
-
-//   mockAnalysisResults = {
-//     energyUsage: 250000,
-//     recommendations: [
-//       'Upgrade HVAC system efficiency',
-//       'Implement smart lighting controls',
-//       'Improve building envelope insulation',
-//     ],
-//     simulationData: [
-//       { month: 'Jan', usage: 25000 },
-//       { month: 'Feb', usage: 22000 },
-//       { month: 'Mar', usage: 20000 },
-//     ],
-//   };
-
-//   // Icon references for template
-//   readonly FileText = FileText;
-//   readonly Building2 = Building2;
-//   readonly Activity = Activity;
-//   readonly Send = Send;
-//   readonly Zap = Zap;
-//   readonly ArrowLeft = ArrowLeft; // Added for Back button
-
-//   onFileUpload(files: File[]) {
-//     console.log(files);
-//   }
-
-//   // New method to reset view states
-//   goBack() {
-//     this.showUpload = false;
-//     this.showViewer = false;
-//     this.showAnalysis = false;
-//   }
-// }
-// chat-interface.component.ts
-
-import { Component } from '@angular/core';
+import {
+  Component,
+  ViewChild,
+  ElementRef,
+  AfterViewChecked,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   LucideAngularModule,
@@ -114,12 +13,13 @@ import {
   Send,
   FileText,
   Zap,
-  ArrowLeft, // Added for Back button
+  ArrowLeft,
 } from 'lucide-angular';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
 import { BuildingViewerComponent } from '../building-viewer/building-viewer.component';
 import { AnalysisResultsComponent } from '../analysis-results/analysis-results.component';
 import { ChatService } from './chat.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-chat-interface',
@@ -130,16 +30,19 @@ import { ChatService } from './chat.service';
     FileUploadComponent,
     BuildingViewerComponent,
     AnalysisResultsComponent,
+    FormsModule,
   ],
   templateUrl: './chat-interface.component.html',
   styleUrls: ['./chat-interface.component.css'],
 })
-export class ChatInterfaceComponent {
+export class ChatInterfaceComponent implements AfterViewChecked {
   showUpload = false;
   showViewer = false;
   showAnalysis = false;
-  showChat = false; // New flag for chat view
-  selectedProject: string | null = null; // Track selected project
+  showChat = false;
+  selectedProject: string | null = null;
+  newMessage: string = '';
+  @ViewChild('chatContainer') chatContainer!: ElementRef<HTMLDivElement>;
 
   constructor(private chatService: ChatService) {
     this.chatService.projectSelected$.subscribe((project) => {
@@ -183,7 +86,6 @@ export class ChatInterfaceComponent {
     },
   ];
 
-  // Dummy chat messages for each project
   dummyChats: {
     [key: string]: { sender: string; message: string; timestamp: string }[];
   } = {
@@ -256,29 +158,89 @@ export class ChatInterfaceComponent {
     ],
   };
 
-  // Icon references for template
   readonly FileText = FileText;
   readonly Building2 = Building2;
   readonly Activity = Activity;
   readonly Send = Send;
   readonly Zap = Zap;
-  readonly ArrowLeft = ArrowLeft; // Added for Back button
+  readonly ArrowLeft = ArrowLeft;
 
   onFileUpload(files: File[]) {
     console.log(files);
   }
 
-  // New method to reset view states
   goBack() {
     this.showUpload = false;
     this.showViewer = false;
     this.showAnalysis = false;
   }
 
-  // Handle project selection from sidebar
   onProjectSelected(project: string) {
-    this.goBack(); // Reset other views
+    this.goBack();
     this.showChat = true;
     this.selectedProject = project;
+  }
+
+  sendMessage() {
+    if (this.newMessage.trim() && this.selectedProject) {
+      const timestap = new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      this.dummyChats[this.selectedProject].push({
+        sender: 'User',
+        message: this.newMessage,
+        timestamp: timestap,
+      });
+      this.scrollToBottom();
+      // AI response simulate
+      setTimeout(() => {
+        this.dummyChats[this.selectedProject!].push({
+          sender: 'AI',
+          message: `Received your message: "${this.newMessage}". How can I assist further?`,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        });
+        this.scrollToBottom();
+      }, 1000);
+      this.newMessage = '';
+    }
+  }
+
+  onKeyPress(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      this.sendMessage();
+    }
+  }
+
+  ngAfterViewChecked() {
+    if (this.showChat && this.chatContainer) {
+      console.log(
+        'Scrolling',
+        this.chatContainer.nativeElement.scrollHeight,
+        this.chatContainer.nativeElement.scrollTop
+      );
+
+      this.scrollToBottom();
+    }
+  }
+
+  private scrollToBottom() {
+    if (this.chatContainer) {
+      const element = this.chatContainer.nativeElement;
+      console.log(
+        'Scroll Height:',
+        element.scrollHeight,
+        'Current Top:',
+        element.scrollTop
+      ); // Debug
+      element.scrollTo({
+        top: element.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   }
 }

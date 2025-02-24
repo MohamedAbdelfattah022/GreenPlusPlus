@@ -1,4 +1,4 @@
-<div class="flex-1 flex flex-col bg-gray-50">
+<div class="flex-1 flex flex-col bg-gray-50 h-screen">
   <div class="flex-1 p-8 overflow-y-auto">
     <ng-container
       *ngIf="!showUpload && !showViewer && !showAnalysis && !showChat"
@@ -76,18 +76,19 @@
       ></app-analysis-results>
     </div>
 
-    <!-- Redesigned Chat Section: Full Width, AI Left, User Right -->
     <div *ngIf="showChat" class="flex-1 flex flex-col w-full">
       <div class="flex items-center gap-2 mb-6">
-        <button (click)="goBack()" class="text-blue-600 hover:text-blue-800">
-          <lucide-icon [name]="ArrowLeft" size="24"></lucide-icon>
-        </button>
+        <button
+          (click)="goBack()"
+          class="text-blue-600 hover:text-blue-800"
+        ></button>
         <h2 class="text-2xl font-bold">{{ selectedProject }} Chat</h2>
       </div>
+
       <div
-        class="flex-1 bg-white rounded-xl shadow-md p-6 overflow-y-auto space-y-6 w-full"
+        #chatContainer
+        class="flex-1 bg-white rounded-xl shadow-md p-6 space-y-6 w-full overflow-y-auto"
       >
-        <!-- Added w-full -->
         <div
           *ngFor="let chat of dummyChats[selectedProject || '']"
           class="flex {{
@@ -139,11 +140,16 @@
   <div class="p-4 bg-white border-t border-gray-200">
     <div class="relative">
       <input
+        [(ngModel)]="newMessage"
+        (keypress)="onKeyPress($event)"
         type="text"
         placeholder="Ask questions about your building analysis..."
         class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       />
-      <button class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600">
+      <button
+        (click)="sendMessage()"
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600"
+      >
         <lucide-icon [name]="Send" size="20"></lucide-icon>
       </button>
     </div>

@@ -18,3 +18,8 @@
   transition: background 0.2s;
   background: transparent;
 }
+
+.chat-message {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}

@@ -6,6 +6,8 @@ import {
   Settings,
   FileText,
   HelpCircle,
+  Building2,
+  Activity,
 } from 'lucide-angular';
 import { ChatService } from '../chat-interface/chat.service';
 import { mockChats } from '../chat-interface/mock-data';
@@ -27,6 +29,8 @@ export class SidebarComponent {
   readonly FileText = FileText;
   readonly HelpCircle = HelpCircle;
   readonly Settings = Settings;
+  readonly Building2 = Building2;
+  readonly Activity = Activity;
 
   onProjectClick(project: string) {
     this.chatService.selectProject(project);

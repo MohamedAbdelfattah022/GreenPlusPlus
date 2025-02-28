@@ -51,9 +51,26 @@
         [(ngModel)]="newMessage"
         (keypress)="onKeyPress($event)"
         type="text"
-        placeholder="Ask questions about your building analysis..."
-        class="w-full px-5 py-3 pr-12 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 hover:shadow-md"
+        placeholder="Ask questions or upload files..."
+        class="w-full px-5 py-3 pr-24 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 hover:shadow-md"
       />
+
+      <input
+        #fileInput
+        type="file"
+        multiple
+        (change)="onFileChange($event)"
+        accept=".pdf,.idf,image/*"
+        class="hidden"
+      />
+
+      <button
+        (click)="fileInput.click()"
+        class="absolute right-12 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
+      >
+        <lucide-icon [name]="Upload" size="20"></lucide-icon>
+      </button>
+
       <button
         (click)="sendMessage()"
         class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 transition-colors duration-200"

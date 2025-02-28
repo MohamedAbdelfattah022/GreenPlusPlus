@@ -6,7 +6,7 @@ import {
   AfterViewChecked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Send } from 'lucide-angular';
+import { LucideAngularModule, Send, Upload } from 'lucide-angular';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -23,6 +23,7 @@ export class ChatComponent implements AfterViewChecked {
 
   newMessage: string = '';
   readonly Send = Send;
+  readonly Upload = Upload;
 
   ngAfterViewChecked() {
     if (this.chatContainer) {
@@ -66,5 +67,54 @@ export class ChatComponent implements AfterViewChecked {
     if (event.key === 'Enter') {
       this.sendMessage();
     }
+  }
+
+  onFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && this.selectedProject) {
+      const files = Array.from(input.files).filter((file) =>
+        this.isAcceptedFileType(file)
+      );
+      if (files.length > 0) {
+        const timestamp = new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+
+        const fileNames = files.map((file) => file.name).join(', ');
+        this.chats.push({
+          sender: 'User',
+          message: `Uploaded files: ${fileNames}`,
+          timestamp: timestamp,
+        });
+
+        setTimeout(() => {
+          this.chats.push({
+            sender: 'AI',
+            message: `Received files: ${fileNames}. How can I assist with these?`,
+            timestamp: new Date().toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+          });
+        }, 1000);
+
+        input.value = '';
+      }
+    }
+  }
+
+  private isAcceptedFileType(file: File): boolean {
+    const acceptedTypes = [
+      'application/pdf',
+      'application/idf',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+    ];
+    return (
+      acceptedTypes.includes(file.type) ||
+      (file.name.endsWith('.idf') && file.type === '')
+    );
   }
 }

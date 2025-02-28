@@ -36,7 +36,7 @@ export class ChatComponent implements AfterViewChecked {
   }
 
   sendMessage() {
-    if (this.newMessage.trim() && this.selectedProject) {
+    if (this.newMessage.trim()) {
       const timestamp = new Date().toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
@@ -71,7 +71,7 @@ export class ChatComponent implements AfterViewChecked {
 
   onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files && this.selectedProject) {
+    if (input.files) {
       const files = Array.from(input.files).filter((file) =>
         this.isAcceptedFileType(file)
       );
@@ -88,6 +88,7 @@ export class ChatComponent implements AfterViewChecked {
           timestamp: timestamp,
         });
 
+        // AI response simulation for file upload
         setTimeout(() => {
           this.chats.push({
             sender: 'AI',

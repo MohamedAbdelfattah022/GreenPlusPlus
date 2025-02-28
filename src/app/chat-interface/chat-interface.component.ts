@@ -34,6 +34,11 @@ export class ChatInterfaceComponent {
   showChat = false;
   selectedProject: string | null = null;
 
+  dummyChats: {
+    [key: string]: { sender: string; message: string; timestamp: string }[];
+  } = { ...mockChats };
+  mockAnalysisResults = mockAnalysisResults;
+
   constructor(private chatService: ChatService) {
     this.chatService.projectSelected$.subscribe((project) => {
       this.onProjectSelected(project);
@@ -49,9 +54,6 @@ export class ChatInterfaceComponent {
         ? () => (this.showViewer = true)
         : () => (this.showAnalysis = true),
   }));
-
-  dummyChats = mockChats;
-  mockAnalysisResults = mockAnalysisResults;
 
   readonly ArrowLeft = ArrowLeft;
   readonly Zap = Zap;
@@ -72,5 +74,8 @@ export class ChatInterfaceComponent {
     this.goBack();
     this.showChat = true;
     this.selectedProject = project;
+    if (!this.dummyChats[project]) {
+      this.dummyChats[project] = [];
+    }
   }
 }

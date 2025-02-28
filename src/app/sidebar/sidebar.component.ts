@@ -40,4 +40,20 @@ export class SidebarComponent {
   onProjectClick(project: string) {
     this.chatService.selectProject(project);
   }
+
+  onNewChat() {
+    const newProjectTitle = this.generateUniqueChatTitle();
+    this.projects = [newProjectTitle, ...this.projects];
+    this.chatService.selectProject(newProjectTitle);
+  }
+
+  private generateUniqueChatTitle(): string {
+    let index = this.projects.length + 1;
+    let newTitle = `Chat ${index}`;
+    while (this.projects.includes(newTitle)) {
+      index++;
+      newTitle = `Chat ${index}`;
+    }
+    return newTitle;
+  }
 }

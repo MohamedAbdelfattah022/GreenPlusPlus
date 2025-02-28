@@ -21,9 +21,14 @@ import { mockChats } from '../chat-interface/mock-data';
 })
 export class SidebarComponent {
   @Output() projectSelected = new EventEmitter<string>();
-  constructor(private chatService: ChatService) {}
-
+  selectedProject: string | null = null;
   projects = Object.keys(mockChats);
+
+  constructor(private chatService: ChatService) {
+    this.chatService.projectSelected$.subscribe((project) => {
+      this.selectedProject = project;
+    });
+  }
 
   readonly PlusCircle = PlusCircle;
   readonly FileText = FileText;

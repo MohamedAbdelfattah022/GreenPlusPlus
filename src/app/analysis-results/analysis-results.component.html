@@ -1,32 +1,46 @@
 <div class="space-y-6">
-  <div class="bg-white p-6 rounded-lg shadow-md">
-    <div class="flex items-center gap-2 mb-4">
-      <lucide-icon [name]="Activity" class="text-blue-500"></lucide-icon>
-      <h3 class="text-xl font-semibold">Energy Analysis Results</h3>
-    </div>
+  <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+    <h3 class="text-xl font-semibold mb-4">Upload Simulation Files</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="p-4 bg-gray-50 rounded-lg">
-        <lucide-icon
-          [name]="LineChart"
-          class="w-6 h-6 text-gray-600 mb-2"
-        ></lucide-icon>
-        <h4 class="font-medium">Total Energy Usage</h4>
-        <p class="text-2xl font-bold text-blue-600">
-          {{ results.energyUsage }} kWh
-        </p>
+      <div>
+        <label class="block mb-2 text-sm font-medium text-gray-700"
+          >IDF File</label
+        >
+        <input
+          type="file"
+          accept=".idf"
+          (change)="onIdfFileChange($event)"
+          class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        />
       </div>
-      <div class="p-4 bg-gray-50 rounded-lg">
-        <lucide-icon
-          [name]="BarChart"
-          class="w-6 h-6 text-gray-600 mb-2"
-        ></lucide-icon>
-        <h4 class="font-medium">Recommendations</h4>
-        <ul class="list-disc list-inside text-sm">
-          <li *ngFor="let rec of results.recommendations" class="text-gray-600">
-            {{ rec }}
-          </li>
-        </ul>
+      <div>
+        <label class="block mb-2 text-sm font-medium text-gray-700"
+          >EPW File</label
+        >
+        <input
+          type="file"
+          accept=".epw"
+          (change)="onEpwFileChange($event)"
+          class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        />
       </div>
     </div>
+    <button
+      (click)="runSimulation()"
+      [disabled]="isLoading"
+      class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+    >
+      {{ isLoading ? "Running Simulation..." : "Run Simulation" }}
+    </button>
+    <p *ngIf="errorMessage" class="mt-2 text-red-500">{{ errorMessage }}</p>
+
+    @if(simulationUrl){
+    <button
+      (click)="openSimulationResults()"
+      class="ml-5 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+    >
+      View Simulation Results
+    </button>
+    }
   </div>
 </div>

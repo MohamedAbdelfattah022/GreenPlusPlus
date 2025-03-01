@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import {
   LucideAngularModule,
   LineChart,
@@ -10,7 +11,7 @@ import {
 @Component({
   selector: 'app-analysis-results',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule], // Removed HttpClientModule
   templateUrl: './analysis-results.component.html',
   styleUrls: ['./analysis-results.component.css'],
 })
@@ -31,4 +32,61 @@ export class AnalysisResultsComponent {
   readonly Activity = Activity;
   readonly LineChart = LineChart;
   readonly BarChart = BarChart;
+
+  idfFile: File | null = null;
+  epwFile: File | null = null;
+  simulationUrl: string | null = null;
+  isLoading: boolean = false;
+  errorMessage: string | null = null;
+
+  private apiUrl =
+    'https://a993-34-83-43-202.ngrok-free.app/api/run-simulation';
+
+  constructor(private http: HttpClient) {}
+
+  onIdfFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.idfFile = input.files[0];
+    }
+  }
+
+  onEpwFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.epwFile = input.files[0];
+    }
+  }
+
+  runSimulation(): void {
+    if (!this.idfFile || !this.epwFile) {
+      this.errorMessage = 'Please upload both IDF and EPW files';
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = null;
+    this.simulationUrl = null;
+
+    const formData = new FormData();
+    formData.append('idf_file', this.idfFile);
+    formData.append('epw_file', this.epwFile);
+
+    this.http.post(this.apiUrl, formData, { responseType: 'blob' }).subscribe({
+      next: (response: Blob) => {
+        this.simulationUrl = window.URL.createObjectURL(response);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.errorMessage = 'Simulation failed: ' + error.message;
+        this.isLoading = false;
+      },
+    });
+  }
+
+  openSimulationResults(): void {
+    if (this.simulationUrl) {
+      window.open(this.simulationUrl, '_blank');
+    }
+  }
 }

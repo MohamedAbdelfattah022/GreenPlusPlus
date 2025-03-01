@@ -1,17 +1,12 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import {
-  LucideAngularModule,
-  LineChart,
-  BarChart,
-  Activity,
-} from 'lucide-angular';
+import { LucideAngularModule, Activity } from 'lucide-angular';
 
 @Component({
   selector: 'app-analysis-results',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule], // Removed HttpClientModule
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './analysis-results.component.html',
   styleUrls: ['./analysis-results.component.css'],
 })
@@ -30,8 +25,6 @@ export class AnalysisResultsComponent {
   };
 
   readonly Activity = Activity;
-  readonly LineChart = LineChart;
-  readonly BarChart = BarChart;
 
   idfFile: File | null = null;
   epwFile: File | null = null;

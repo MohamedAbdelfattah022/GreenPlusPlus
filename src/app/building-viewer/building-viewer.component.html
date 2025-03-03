@@ -1,3 +1,11 @@
-<div class="w-full h-[400px] bg-gray-900 rounded-lg">
-  <canvas #canvas class="w-full h-full"></canvas>
+<div class="viewer-container">
+  <iframe
+    [src]="viewerUrl | safeUrl"
+    width="100%"
+    height="600px"
+    frameborder="0"
+    allowfullscreen
+    title="Spider IDF Viewer"
+  >
+  </iframe>
 </div>

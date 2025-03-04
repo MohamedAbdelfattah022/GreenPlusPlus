@@ -33,7 +33,7 @@ export class AnalysisResultsComponent {
   errorMessage: string | null = null;
 
   private apiUrl =
-    'https://a993-34-83-43-202.ngrok-free.app/api/run-simulation';
+    'API_URL';
 
   constructor(private http: HttpClient) {}
 

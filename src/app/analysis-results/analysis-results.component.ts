@@ -33,7 +33,7 @@ export class AnalysisResultsComponent {
   errorMessage: string | null = null;
 
   private apiUrl =
-    'https://a993-34-83-43-202.ngrok-free.app/api/run-simulation';
+    'https://energyplus-flask-app-950448131349.us-central1.run.app/api/run-simulation';
 
   constructor(private http: HttpClient) {}
 

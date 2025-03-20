@@ -31,9 +31,8 @@
               }} transition-colors duration-200 hover:shadow-md break-words"
             >
               <p class="text-sm leading-relaxed whitespace-pre-wrap">
-                {{ chat.message }}
-                @if (isStreaming && $index === chats.length - 1 && chat.sender
-                === 'AI') {
+                <span [innerHTML]="renderMarkdown(chat.message)"></span>
+                @if (isStreaming && $index === chats.length - 1 && chat.sender === 'AI') {
                 <span class="inline-flex space-x-1">
                   <span
                     class="w-2 h-2 bg-gray-500 rounded-full animate-pulse"

@@ -1,45 +1,29 @@
 <div class="flex flex-col h-screen">
-  <div #chatContainer class="flex-1 overflow-y-auto py-6 space-y-4">
-    <div class="mx-auto space-y-4">
+  <div class="flex-1 overflow-y-auto">
+    <div class="p-4 space-y-4">
       @for (chat of chats; track $index) {
-      <div
-        class="flex {{
-          chat.sender === 'AI' ? 'justify-start' : 'justify-end'
-        }} transition-all duration-200"
-      >
-        <div
-          class="flex items-start gap-3 max-w-[70%] {{
-            chat.sender === 'AI' ? 'flex-row' : 'flex-row-reverse'
-          }}"
-        >
-          <div
-            class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 shadow-md {{
+      <div class="flex {{ chat.sender === 'AI' ? 'justify-start' : 'justify-end' }}">
+        <div class="flex items-start gap-3 {{ chat.sender === 'AI' ? 'flex-row' : 'flex-row-reverse' }} max-w-[70%]">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 shadow-md {{
               chat.sender === 'AI'
                 ? 'bg-gradient-to-br from-blue-500 to-blue-600'
                 : 'bg-gradient-to-br from-gray-400 to-gray-500'
-            }}"
-          >
+            }}">
             {{ chat.sender === "AI" ? "AI" : "U" }}
           </div>
 
-          <div class="flex flex-col w-full">
-            <div
-              class="mt-1 p-4 rounded-xl shadow-sm chat-message {{
+          <div>
+            <div class="chat-message {{
                 chat.sender === 'AI'
                   ? 'bg-blue-50 text-blue-900'
                   : 'bg-white text-gray-900'
-              }} transition-colors duration-200 hover:shadow-md break-words"
-            >
-              <p class="text-sm leading-relaxed whitespace-pre-wrap">
-                <span [innerHTML]="renderMarkdown(chat.message)"></span>
-                @if (isStreaming && $index === chats.length - 1 && chat.sender === 'AI') {
-                <span class="inline-flex space-x-1">
-                  <span
-                    class="w-2 h-2 bg-gray-500 rounded-full animate-pulse"
-                  ></span>
-                </span>
-                }
-              </p>
+              }} p-2 rounded-xl shadow-sm">
+              <div [innerHTML]="renderMarkdown(chat.message)" class="text-sm"></div>
+              @if (isStreaming && $index === chats.length - 1 && chat.sender === 'AI') {
+              <span class="inline-flex space-x-1">
+                <span class="w-1.5 h-1.5 bg-gray-500 rounded-full animate-pulse"></span>
+              </span>
+              }
             </div>
           </div>
         </div>
@@ -52,44 +36,46 @@
     </div>
   </div>
 
-  <div class="pb-6">
-    <div class="relative max-w-4xl mx-auto">
-      <input
-        [(ngModel)]="newMessage"
-        (keypress)="onKeyPress($event)"
-        type="text"
-        placeholder="Ask questions or upload files..."
-        class="w-full px-5 py-3 pr-24 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 hover:shadow-md"
-        [disabled]="isStreaming"
-      />
+  <div class="flex-shrink-0">
+    <div class="p-4">
+      <div class="relative max-w-4xl mx-auto">
+        <input
+          [(ngModel)]="newMessage"
+          (keypress)="onKeyPress($event)"
+          type="text"
+          placeholder="Ask questions or upload files..."
+          class="w-full px-5 py-3 pr-24 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 hover:shadow-md"
+          [disabled]="isStreaming"
+        />
 
-      <input
-        #fileInput
-        type="file"
-        multiple
-        (change)="onFileChange($event)"
-        accept=".pdf,.idf,image/*"
-        class="hidden"
-        [disabled]="isStreaming"
-      />
+        <input
+          #fileInput
+          type="file"
+          multiple
+          (change)="onFileChange($event)"
+          accept=".pdf,.idf,image/*"
+          class="hidden"
+          [disabled]="isStreaming"
+        />
 
-      <button
-        (click)="fileInput.click()"
-        class="absolute right-12 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
-        [disabled]="isStreaming"
-        [class.opacity-50]="isStreaming"
-      >
-        <lucide-icon [name]="Upload" size="20"></lucide-icon>
-      </button>
+        <button
+          (click)="fileInput.click()"
+          class="absolute right-12 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
+          [disabled]="isStreaming"
+          [class.opacity-50]="isStreaming"
+        >
+          <lucide-icon [name]="Upload" size="20"></lucide-icon>
+        </button>
 
-      <button
-        (click)="sendMessage()"
-        class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
-        [disabled]="isStreaming || !newMessage.trim()"
-        [class.opacity-50]="isStreaming || !newMessage.trim()"
-      >
-        <lucide-icon [name]="Send" size="20"></lucide-icon>
-      </button>
+        <button
+          (click)="sendMessage()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
+          [disabled]="isStreaming || !newMessage.trim()"
+          [class.opacity-50]="isStreaming || !newMessage.trim()"
+        >
+          <lucide-icon [name]="Send" size="20"></lucide-icon>
+        </button>
+      </div>
     </div>
   </div>
 </div>

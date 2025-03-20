@@ -37,6 +37,10 @@ export class ChatComponent implements AfterViewChecked, OnInit {
   ) {}
 
   ngAfterViewChecked() {
+    this.scrollToBottom();
+  }
+
+  private scrollToBottom(): void {
     if (this.chatContainer) {
       const element = this.chatContainer.nativeElement;
       element.scrollTo({
@@ -97,8 +101,8 @@ export class ChatComponent implements AfterViewChecked, OnInit {
         next: (response) => {
           if (response.text) {
             this.currentStreamedMessage += response.text;
-            this.chats[this.chats.length - 1].message =
-              this.currentStreamedMessage;
+            this.chats[this.chats.length - 1].message = this.currentStreamedMessage;
+            this.scrollToBottom();
           }
         },
         error: (error) => {

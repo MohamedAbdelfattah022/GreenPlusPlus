@@ -13,7 +13,6 @@
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
-  /* background: #93c5fd; */
   border-radius: 4px;
   transition: background 0.2s;
   background: transparent;
@@ -22,4 +21,225 @@
 .chat-message {
   word-break: break-word;
   overflow-wrap: anywhere;
+}
+
+
+.chat-message ::ng-deep p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  color: inherit;
+}
+
+.chat-message ::ng-deep code {
+  background-color: rgba(0, 0, 0, 0.08);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.875em;
+  color: #e83e8c;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.chat-message ::ng-deep pre {
+  background-color: #1a1a1a;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+
+.chat-message ::ng-deep .copy-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2rem;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  background-color: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.chat-message ::ng-deep pre:hover .copy-button {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.chat-message ::ng-deep .copy-button:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.chat-message ::ng-deep .copy-button.copied {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.2);
+}
+
+.chat-message ::ng-deep .copy-button svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2;
+  pointer-events: none;
+  flex-shrink: 0;
+  margin: 0 -0.125rem;
+}
+
+@media (min-width: 640px) {
+  .chat-message ::ng-deep .copy-button span {
+    display: inline-block;
+  }
+}
+
+@media (max-width: 639px) {
+  .chat-message ::ng-deep .copy-button span {
+    display: none;
+  }
+}
+
+.chat-message ::ng-deep pre code {
+  background-color: transparent;
+  padding: 0;
+  color: #e9ecef;
+  border: none;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+.chat-message ::ng-deep ul, .chat-message ::ng-deep ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.chat-message ::ng-deep li {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.chat-message ::ng-deep a {
+  color: #3b82f6;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.chat-message ::ng-deep a:hover {
+  border-bottom-color: #3b82f6;
+}
+
+.chat-message ::ng-deep blockquote {
+  border-left: 4px solid #3b82f6;
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  background-color: rgba(59, 130, 246, 0.05);
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: #4b5563;
+}
+
+.chat-message ::ng-deep table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chat-message ::ng-deep th, .chat-message ::ng-deep td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.chat-message ::ng-deep th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.chat-message ::ng-deep tr:last-child td {
+  border-bottom: none;
+}
+
+.chat-message ::ng-deep tr:hover td {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+
+.chat-message ::ng-deep h1,
+.chat-message ::ng-deep h2,
+.chat-message ::ng-deep h3,
+.chat-message ::ng-deep h4,
+.chat-message ::ng-deep h5,
+.chat-message ::ng-deep h6 {
+  margin: 1.5rem 0 1rem;
+  line-height: 1.3;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.chat-message ::ng-deep h1 { font-size: 2rem; }
+.chat-message ::ng-deep h2 { font-size: 1.75rem; }
+.chat-message ::ng-deep h3 { font-size: 1.5rem; }
+.chat-message ::ng-deep h4 { font-size: 1.25rem; }
+.chat-message ::ng-deep h5 { font-size: 1.125rem; }
+.chat-message ::ng-deep h6 { font-size: 1rem; }
+
+
+.chat-message ::ng-deep ul {
+  list-style-type: disc;
+}
+
+.chat-message ::ng-deep ul ul {
+  list-style-type: circle;
+}
+
+.chat-message ::ng-deep ul ul ul {
+  list-style-type: square;
+}
+
+.chat-message ::ng-deep ol {
+  list-style-type: decimal;
+}
+
+.chat-message ::ng-deep ol ol {
+  list-style-type: lower-alpha;
+}
+
+.chat-message ::ng-deep ol ol ol {
+  list-style-type: lower-roman;
+}
+
+
+.chat-message ::ng-deep hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 2rem 0;
+}
+
+
+.chat-message ::ng-deep input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+
+.chat-message ::ng-deep img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }

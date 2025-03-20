@@ -32,6 +32,14 @@
             >
               <p class="text-sm leading-relaxed whitespace-pre-wrap">
                 {{ chat.message }}
+                @if (isStreaming && $index === chats.length - 1 && chat.sender
+                === 'AI') {
+                <span class="inline-flex space-x-1">
+                  <span
+                    class="w-2 h-2 bg-gray-500 rounded-full animate-pulse"
+                  ></span>
+                </span>
+                }
               </p>
             </div>
           </div>
@@ -53,6 +61,7 @@
         type="text"
         placeholder="Ask questions or upload files..."
         class="w-full px-5 py-3 pr-24 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 hover:shadow-md"
+        [disabled]="isStreaming"
       />
 
       <input
@@ -62,11 +71,14 @@
         (change)="onFileChange($event)"
         accept=".pdf,.idf,image/*"
         class="hidden"
+        [disabled]="isStreaming"
       />
 
       <button
         (click)="fileInput.click()"
         class="absolute right-12 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
+        [disabled]="isStreaming"
+        [class.opacity-50]="isStreaming"
       >
         <lucide-icon [name]="Upload" size="20"></lucide-icon>
       </button>
@@ -74,6 +86,8 @@
       <button
         (click)="sendMessage()"
         class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
+        [disabled]="isStreaming || !newMessage.trim()"
+        [class.opacity-50]="isStreaming || !newMessage.trim()"
       >
         <lucide-icon [name]="Send" size="20"></lucide-icon>
       </button>

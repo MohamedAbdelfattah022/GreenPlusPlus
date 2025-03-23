@@ -8,32 +8,28 @@ export interface Message {
 
 export interface ChatResponse {
   text?: string;
-  done?: boolean;
-  error?: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChatService {
-  private apiUrl = 'http://localhost:8000/api';
-  private readonly defaultModel = 'llama3.2';
+  private apiUrl = 'http://localhost:5251/api/Chat/stream';
 
   constructor() {}
 
   sendMessageStream(
     messages: Message[],
-    model: string = this.defaultModel
+    prompt: string = ''
   ): Observable<ChatResponse> {
     const responseSubject = new Subject<ChatResponse>();
 
     const requestBody = {
-      messages,
-      model,
-      stream: true,
+      messages: messages.length > 0 ? messages : undefined,
+      prompt,
     };
 
-    fetch(`${this.apiUrl}/chat`, {
+    fetch(this.apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -54,25 +50,15 @@ export class ChatService {
           try {
             while (true) {
               const { value, done } = await reader.read();
-
-              if (done) {
-                break;
-              }
+              if (done) break;
 
               const chunk = decoder.decode(value);
               const lines = chunk.split('\n\n');
 
               for (const line of lines) {
                 if (line.startsWith('data: ')) {
-                  try {
-                    const data = JSON.parse(line.substring(6));
-                    responseSubject.next(data);
-
-                    if (data.done) {
-                      responseSubject.complete();
-                      return;
-                    }
-                  } catch (e) {}
+                  const textData = line.substring(6);
+                  responseSubject.next({ text: textData });
                 }
               }
             }

@@ -7,10 +7,10 @@ import {
   OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Send, Upload, Copy, Check } from 'lucide-angular';
+import { LucideAngularModule, Send, Upload} from 'lucide-angular';
 import { FormsModule } from '@angular/forms';
 import { ChatService, Message } from '../services/chat.service';
-import { marked, Marked } from 'marked';
+import { marked } from 'marked';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
@@ -30,6 +30,7 @@ export class ChatComponent implements AfterViewChecked, OnInit {
   readonly Upload = Upload;
   isStreaming: boolean = false;
   currentStreamedMessage: string = '';
+  selectedFile: File | null = null;
 
   constructor(
     private chatService: ChatService,
@@ -68,7 +69,7 @@ export class ChatComponent implements AfterViewChecked, OnInit {
           button.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"></path>
             </svg>
             Copy
           `;
@@ -79,42 +80,90 @@ export class ChatComponent implements AfterViewChecked, OnInit {
 
   sendMessage() {
     if (this.newMessage.trim() && !this.isStreaming) {
-      this.chats.push({
-        sender: 'User',
-        message: this.newMessage,
-      });
+      if (this.selectedFile) {
+        this.chats.push({
+          sender: 'User',
+          message: `File: ${this.selectedFile.name}\n${this.newMessage}`,
+        });
 
-      const messages: Message[] = this.chats.map((chat) => ({
-        role: chat.sender.toLowerCase() === 'user' ? 'user' : 'assistant',
-        content: chat.message,
-      }));
+        this.chats.push({
+          sender: 'AI',
+          message: '',
+        });
 
-      this.chats.push({
-        sender: 'AI',
-        message: '',
-      });
+        this.isStreaming = true;
+        this.currentStreamedMessage = '';
 
-      this.isStreaming = true;
-      this.currentStreamedMessage = '';
+        this.chatService.uploadFile(this.selectedFile, this.newMessage).subscribe({
+          next: (response) => {
+            if (response.content) {
+              this.currentStreamedMessage = response.content;
+              this.chats[this.chats.length - 1].message = this.currentStreamedMessage;
+            } else if (response.url) {
+              this.currentStreamedMessage += `File processed successfully: ${response.url}\n`;
+              this.chats[this.chats.length - 1].message = this.currentStreamedMessage;
+            } else if (response.error) {
+              this.currentStreamedMessage += `Error: ${response.error}\n`;
+              this.chats[this.chats.length - 1].message = this.currentStreamedMessage;
+            }
+            setTimeout(() => this.scrollToBottom(), 10);
+          },
+          error: (error) => {
+            console.error('Error uploading file:', error);
+            this.chats[this.chats.length - 1].message =
+              `Error uploading file: ${error}`;
+            this.isStreaming = false;
+          },
+          complete: () => {
+            this.isStreaming = false;
+            this.currentStreamedMessage = '';
+            this.selectedFile = null;
+            setTimeout(() => this.scrollToBottom(), 100);
+          },
+        });
+      } else {
+        this.chats.push({
+          sender: 'User',
+          message: this.newMessage,
+        });
 
-      this.chatService.sendMessageStream(messages).subscribe({
-        next: (response) => {
-          if (response.text) {
-            this.currentStreamedMessage += response.text;
-            this.chats[this.chats.length - 1].message = this.currentStreamedMessage;
-            this.scrollToBottom();
-          }
-        },
-        error: (error) => {
-          console.error('Error from chat service:', error);
-          this.chats[this.chats.length - 1].message =
-            'Error: Could not get response from LLM.';
-          this.isStreaming = false;
-        },
-        complete: () => {
-          this.isStreaming = false;
-        },
-      });
+        const messages: Message[] = this.chats.map((chat) => ({
+          role: chat.sender.toLowerCase() === 'user' ? 'user' : 'assistant',
+          content: chat.message,
+        }));
+
+        this.chats.push({
+          sender: 'AI',
+          message: '',
+        });
+
+        this.isStreaming = true;
+        this.currentStreamedMessage = '';
+
+        this.chatService.sendMessageStream(messages).subscribe({
+          next: (response) => {
+            if (response.content) {
+              this.currentStreamedMessage = response.content;
+              this.chats[this.chats.length - 1].message = this.currentStreamedMessage;
+            } else if (response.text) {
+              this.currentStreamedMessage += response.text;
+              this.chats[this.chats.length - 1].message = this.currentStreamedMessage;
+            }
+            setTimeout(() => this.scrollToBottom(), 10);
+          },
+          error: (error) => {
+            console.error('Error from chat service:', error);
+            this.chats[this.chats.length - 1].message =
+              'Error: Could not get response from LLM. Please try again.';
+            this.isStreaming = false;
+          },
+          complete: () => {
+            this.isStreaming = false;
+            this.currentStreamedMessage = '';
+            setTimeout(() => this.scrollToBottom(), 100);
+          },
+        });
+      }
 
       this.newMessage = '';
     }
@@ -133,21 +182,16 @@ export class ChatComponent implements AfterViewChecked, OnInit {
       const files = Array.from(input.files).filter((file) =>
         this.isAcceptedFileType(file)
       );
+
       if (files.length > 0) {
-        const fileNames = files.map((file) => file.name).join(', ');
-        this.chats.push({
-          sender: 'User',
-          message: `Uploaded files: ${fileNames}`,
-        });
-
-        this.chats.push({
-          sender: 'AI',
-          message: `Received files: ${fileNames}. File processing would be implemented with streaming.`,
-        });
-
+        this.selectedFile = files[0];
         input.value = '';
       }
     }
+  }
+
+  clearSelectedFile() {
+    this.selectedFile = null;
   }
 
   private isAcceptedFileType(file: File): boolean {
@@ -171,7 +215,7 @@ export class ChatComponent implements AfterViewChecked, OnInit {
         <button class="copy-button" onclick="copyCode(this)">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"></path>
           </svg>
           Copy
         </button>
@@ -185,7 +229,7 @@ export class ChatComponent implements AfterViewChecked, OnInit {
       breaks: true,
       renderer
     });
-    
+
     const htmlContent = marked.parse(content) as string;
     return this.sanitizer.bypassSecurityTrustHtml(htmlContent);
   }

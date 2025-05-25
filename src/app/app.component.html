@@ -1,5 +1,7 @@
 @if (showSignUp) {
-<app-sign-up-form (complete)="onSignUpComplete()"></app-sign-up-form>
+<app-sign-up-form (complete)="onSignUpComplete()" (showLogin)="onShowLogin()"></app-sign-up-form>
+} @else if (showLogin) {
+<app-login></app-login>
 } @else {
 <div class="flex bg-gray-50">
   <app-sidebar (projectSelected)="onProjectSelected($event)"></app-sidebar>

@@ -1,5 +1,7 @@
-import { Injectable } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import {Injectable} from '@angular/core';
+import {Observable, Subject} from 'rxjs';
+import {environment} from '../../environments/environment';
+import {AuthService} from './auth.service';
 
 export interface Message {
   role: string;
@@ -8,72 +10,269 @@ export interface Message {
 
 export interface ChatResponse {
   text?: string;
+  content?: string;
+}
+
+export interface FileUploadResponse {
+  url?: string;
+  error?: string;
+  content?: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChatService {
-  private apiUrl = 'http://localhost:5251/api/Chat/stream';
+  private apiUrl = environment.apiUrl;
+  private noResponseTimeout = 15000;
 
-  constructor() {}
+  constructor(private authService: AuthService) {
+  }
+
+  private getAuthHeaders(): Record<string, string> {
+    const session = this.authService.getSession();
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
+      'Authorization': `Bearer ${session?.access_token || ''}`
+    };
+  }
+
+  private getFileUploadHeaders(): Record<string, string> {
+    const session = this.authService.getSession();
+    return {
+      'Accept': 'text/event-stream',
+      'Authorization': `Bearer ${session?.access_token || ''}`
+    };
+  }
+
+  private handleStreamingResponse<T>(
+    response: Response,
+    responseSubject: Subject<T>,
+    timeoutId: any,
+    parseDataFunction: (jsonData: any) => T
+  ): void {
+    if (!response.body) {
+      throw new Error('No response body available for streaming');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    const processStream = async () => {
+      try {
+        while (true) {
+          const {done, value} = await reader.read();
+
+          if (done) {
+            clearTimeout(timeoutId);
+            console.log('Stream completed');
+            responseSubject.complete();
+            break;
+          }
+
+          clearTimeout(timeoutId);
+
+          const chunk = decoder.decode(value, {stream: true});
+          buffer += chunk;
+
+          console.log('Raw chunk received:', chunk);
+
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            console.log('Processing line:', line);
+
+            if (line.startsWith('data: ')) {
+              const dataStr = line.substring(6).trim();
+              console.log('Data string:', dataStr);
+
+              if (dataStr === '[DONE]' || dataStr === '') {
+                console.log('End marker or empty data, continuing');
+                continue;
+              }
+
+              try {
+                const jsonData = JSON.parse(dataStr);
+                console.log('Parsed JSON:', jsonData);
+
+                const parsedResponse = parseDataFunction(jsonData);
+                console.log('Parsed response:', parsedResponse);
+
+                responseSubject.next(parsedResponse);
+              } catch (parseError) {
+                console.warn('Error parsing JSON from stream:', parseError);
+                console.warn('Problematic data:', dataStr);
+
+                if (dataStr.trim()) {
+                  const fallbackResponse = parseDataFunction({content: dataStr});
+                  responseSubject.next(fallbackResponse);
+                }
+              }
+            } else if (line.trim() && !line.startsWith(':')) {
+              console.log('Non-data line:', line);
+            }
+          }
+        }
+      } catch (streamError) {
+        console.error('Error processing stream:', streamError);
+        const errorMessage = streamError instanceof Error ? streamError.message : String(streamError);
+        responseSubject.error(`Error processing response stream: ${errorMessage}`);
+      }
+    };
+
+    processStream();
+  }
 
   sendMessageStream(
     messages: Message[],
     prompt: string = ''
   ): Observable<ChatResponse> {
     const responseSubject = new Subject<ChatResponse>();
+    let hasReceivedResponse = false;
+    let timeoutId: any;
+    let accumulatedContent = '';
 
     const requestBody = {
-      messages: messages.length > 0 ? messages : undefined,
-      prompt,
+      message: prompt || (messages.length > 0 ? messages[messages.length - 1].content : ''),
     };
 
-    fetch(this.apiUrl, {
+    const headers = this.getAuthHeaders();
+
+    console.log('Sending message request:', requestBody);
+
+    timeoutId = setTimeout(() => {
+      if (!hasReceivedResponse) {
+        console.log('Message timeout reached');
+        responseSubject.next({
+          text: "I'm sorry, I couldn't generate a response. Please try again."
+        });
+        responseSubject.complete();
+      }
+    }, this.noResponseTimeout);
+
+    fetch(`${this.apiUrl}message`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: headers,
       body: JSON.stringify(requestBody),
+      credentials: 'include'
     })
-      .then((response) => {
-        if (!response.body) {
-          responseSubject.error('No response body');
-          responseSubject.complete();
-          return;
+      .then(response => {
+        console.log('Message response received:', response.status, response.statusText);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
+        hasReceivedResponse = true;
 
-        const processStream = async () => {
-          try {
-            while (true) {
-              const { value, done } = await reader.read();
-              if (done) break;
-
-              const chunk = decoder.decode(value);
-              const lines = chunk.split('\n\n');
-
-              for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                  const textData = line.substring(6);
-                  responseSubject.next({ text: textData });
-                }
-              }
+        this.handleStreamingResponse(
+          response,
+          responseSubject,
+          timeoutId,
+          (jsonData) => {
+            if (jsonData.content) {
+              accumulatedContent += jsonData.content;
+              return {
+                text: jsonData.content,
+                content: accumulatedContent
+              };
             }
-          } catch (error) {
-            responseSubject.error(error);
-          } finally {
-            responseSubject.complete();
+            return {text: jsonData.text || ''};
           }
-        };
-
-        processStream();
+        );
       })
-      .catch((error) => {
-        responseSubject.error(error);
+      .catch(error => {
+        clearTimeout(timeoutId);
+        console.error('Error in sendMessageStream:', error);
+        responseSubject.error(`Error connecting to the model: ${error.message}`);
+      });
+
+    return responseSubject.asObservable();
+  }
+
+  uploadFile(file: File, prompt: string = ''): Observable<FileUploadResponse> {
+    const responseSubject = new Subject<FileUploadResponse>();
+    let hasReceivedResponse = false;
+    let timeoutId: any;
+    let accumulatedContent = '';
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('prompt', prompt);
+
+    const headers = this.getFileUploadHeaders();
+
+    console.log('Uploading file:', file.name, 'with prompt:', prompt);
+
+    timeoutId = setTimeout(() => {
+      if (!hasReceivedResponse) {
+        console.log('Upload timeout reached');
+        responseSubject.next({
+          error: "No response received from the upload service. The file may still be processing."
+        });
         responseSubject.complete();
+      }
+    }, this.noResponseTimeout);
+
+    fetch(`${this.apiUrl}upload`, {
+      method: 'POST',
+      headers: headers,
+      body: formData,
+      credentials: 'include'
+    })
+      .then(response => {
+        console.log('Upload response received:', response.status, response.statusText);
+        console.log('Upload response headers:', response.headers);
+
+        const contentType = response.headers.get('content-type');
+        console.log('Upload response content-type:', contentType);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        hasReceivedResponse = true;
+
+        this.handleStreamingResponse(
+          response,
+          responseSubject,
+          timeoutId,
+          (jsonData) => {
+            console.log('Processing upload JSON data:', jsonData);
+
+            const result: FileUploadResponse = {};
+
+            if (jsonData.content) {
+              accumulatedContent += jsonData.content;
+              result.content = accumulatedContent;
+            }
+
+            if (jsonData.url) {
+              result.url = jsonData.url;
+            }
+
+            if (jsonData.error) {
+              result.error = jsonData.error;
+            }
+
+            if (!jsonData.content && !jsonData.url && !jsonData.error) {
+              const contentStr = JSON.stringify(jsonData);
+              accumulatedContent += contentStr;
+              result.content = accumulatedContent;
+            }
+
+            console.log('Upload parsed result:', result);
+            return result;
+          }
+        );
+      })
+      .catch(error => {
+        clearTimeout(timeoutId);
+        console.error('Error in uploadFile:', error);
+        responseSubject.error(`Error uploading file: ${error.message}`);
       });
 
     return responseSubject.asObservable();

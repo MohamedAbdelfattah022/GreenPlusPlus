@@ -1,11 +1,10 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { LucideAngularModule, FileUp, Zap, ArrowLeft } from 'lucide-angular';
-import { FileUploadComponent } from '../file-upload/file-upload.component';
-import { BuildingViewerComponent } from '../building-viewer/building-viewer.component';
-import { AnalysisResultsComponent } from '../analysis-results/analysis-results.component';
-import { ChatService } from './chat.service';
-import { ChatComponent } from '../chat/chat.component';
+import {Component} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {LucideAngularModule, Zap, ArrowLeft} from 'lucide-angular';
+import {BuildingViewerComponent} from '../building-viewer/building-viewer.component';
+import {AnalysisResultsComponent} from '../analysis-results/analysis-results.component';
+import {ChatService as ProjectChatService} from './chat.service';
+import {ChatComponent} from '../chat/chat.component';
 import {
   mockFeatures,
   mockChats,
@@ -19,7 +18,6 @@ import {
   imports: [
     CommonModule,
     LucideAngularModule,
-    FileUploadComponent,
     BuildingViewerComponent,
     AnalysisResultsComponent,
     ChatComponent,
@@ -36,11 +34,13 @@ export class ChatInterfaceComponent {
 
   dummyChats: {
     [key: string]: { sender: string; message: string; timestamp: string }[];
-  } = { ...mockChats };
+  } = {...mockChats};
   mockAnalysisResults = mockAnalysisResults;
 
-  constructor(private chatService: ChatService) {
-    this.chatService.projectSelected$.subscribe((project) => {
+  constructor(
+    private projectChatService: ProjectChatService
+  ) {
+    this.projectChatService.projectSelected$.subscribe((project) => {
       this.onProjectSelected(project);
     });
   }
@@ -51,16 +51,12 @@ export class ChatInterfaceComponent {
       feature.title === 'File Processing'
         ? () => (this.showUpload = true)
         : feature.title === '3D Visualization'
-        ? () => (this.showViewer = true)
-        : () => (this.showAnalysis = true),
+          ? () => (this.showViewer = true)
+          : () => (this.showAnalysis = true),
   }));
 
   readonly ArrowLeft = ArrowLeft;
   readonly Zap = Zap;
-
-  onFileUpload(files: File[]) {
-    console.log(files);
-  }
 
   goBack() {
     this.showUpload = false;

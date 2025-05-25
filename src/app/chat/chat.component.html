@@ -2,36 +2,41 @@
   <div class="flex-1 overflow-y-auto" #chatContainer>
     <div class="p-4 space-y-4">
       @for (chat of chats; track $index) {
-      <div class="flex {{ chat.sender === 'AI' ? 'justify-start' : 'justify-end' }}">
-        <div class="flex items-start gap-3 {{ chat.sender === 'AI' ? 'flex-row' : 'flex-row-reverse' }} max-w-[70%]">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 shadow-md {{
+        <div class="flex {{ chat.sender === 'AI' ? 'justify-start' : 'justify-end' }}">
+          <div class="flex items-start gap-3 {{ chat.sender === 'AI' ? 'flex-row' : 'flex-row-reverse' }} max-w-[70%]">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 shadow-md {{
               chat.sender === 'AI'
                 ? 'bg-gradient-to-br from-blue-500 to-blue-600'
                 : 'bg-gradient-to-br from-gray-400 to-gray-500'
             }}">
-            {{ chat.sender === "AI" ? "AI" : "U" }}
-          </div>
+              {{ chat.sender === "AI" ? "AI" : "U" }}
+            </div>
 
-          <div>
-            <div class="chat-message {{
+            <div>
+              @if (chat.sender === 'User' && chat.message.startsWith('File: ')) {
+                <div class="mb-2 bg-gray-100 p-2 rounded-lg text-sm text-gray-700">
+                  {{ chat.message.split('\n')[0] }}
+                </div>
+              }
+              <div class="chat-message {{
                 chat.sender === 'AI'
                   ? 'bg-blue-50 text-blue-900'
                   : 'bg-white text-gray-900'
               }} p-2 rounded-xl shadow-sm">
-              <div [innerHTML]="renderMarkdown(chat.message)" class="text-sm"></div>
-              @if (isStreaming && $index === chats.length - 1 && chat.sender === 'AI') {
-              <span class="inline-flex space-x-1">
+                <div [innerHTML]="renderMarkdown(chat.sender === 'User' && chat.message.startsWith('File: ') ? chat.message.split('\n').slice(1).join('\n') : chat.message)" class="text-sm"></div>
+                @if (isStreaming && $index === chats.length - 1 && chat.sender === 'AI') {
+                  <span class="inline-flex space-x-1">
                 <span class="w-1.5 h-1.5 bg-gray-500 rounded-full animate-pulse"></span>
               </span>
-              }
+                }
+              </div>
             </div>
           </div>
         </div>
-      </div>
       } @empty {
-      <div class="text-center text-gray-500 py-8">
-        <p>No messages yet. Start the conversation!</p>
-      </div>
+        <div class="text-center text-gray-500 py-8">
+          <p>No messages yet. Start the conversation!</p>
+        </div>
       }
     </div>
   </div>
@@ -39,11 +44,25 @@
   <div class="flex-shrink-0">
     <div class="p-4">
       <div class="relative max-w-4xl mx-auto">
+        @if (selectedFile) {
+          <div class="mb-2 flex items-center justify-between bg-gray-100 p-2 rounded-lg">
+            <span class="text-sm text-gray-700">Selected: {{ selectedFile.name }}</span>
+            <button
+              (click)="clearSelectedFile()"
+              class="text-gray-500 hover:text-gray-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+              </svg>
+            </button>
+          </div>
+        }
         <input
           [(ngModel)]="newMessage"
           (keypress)="onKeyPress($event)"
           type="text"
-          placeholder="Ask questions or upload files..."
+          placeholder="Ask questions or enter a prompt for the selected file..."
           class="w-full px-5 py-3 pr-24 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 hover:shadow-md"
           [disabled]="isStreaming"
         />

@@ -27,8 +27,10 @@ export interface Session {
 
 export interface AuthResponse {
   message: string;
-  session: Session;
-  user: User;
+  access_token: string;
+  user_id: string;
+  session?: Session;
+  user?: User;
 }
 
 @Injectable({
@@ -48,8 +50,27 @@ export class AuthService {
   }
 
   saveSession(response: AuthResponse): void {
-    localStorage.setItem('user', JSON.stringify(response.user));
-    localStorage.setItem('session', JSON.stringify(response.session));
+    // Handle both the new API response format and the old format
+    if (response.access_token && response.user_id) {
+      // New format: create session and user objects
+      const session: Session = {
+        access_token: response.access_token,
+        refresh_token: null
+      };
+
+      const user: User = {
+        id: response.user_id,
+        email: '',  // We don't have this in the response
+        email_confirmed_at: null
+      };
+
+      localStorage.setItem('session', JSON.stringify(session));
+      localStorage.setItem('user', JSON.stringify(user));
+    } else if (response.session && response.user) {
+      // Old format
+      localStorage.setItem('user', JSON.stringify(response.user));
+      localStorage.setItem('session', JSON.stringify(response.session));
+    }
   }
 
   getCurrentUser(): User | null {
@@ -63,7 +84,8 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    const session = this.getSession();
+    return session?.access_token || null;
   }
 
 

@@ -24,7 +24,6 @@ export interface FileUploadResponse {
 })
 export class ChatService {
   private apiUrl = environment.apiUrl;
-  private noResponseTimeout = 15000;
 
   constructor(private authService: AuthService) {
   }
@@ -49,7 +48,6 @@ export class ChatService {
   private handleStreamingResponse<T>(
     response: Response,
     responseSubject: Subject<T>,
-    timeoutId: any,
     parseDataFunction: (jsonData: any) => T
   ): void {
     if (!response.body) {
@@ -66,13 +64,10 @@ export class ChatService {
           const {done, value} = await reader.read();
 
           if (done) {
-            clearTimeout(timeoutId);
             console.log('Stream completed');
             responseSubject.complete();
             break;
           }
-
-          clearTimeout(timeoutId);
 
           const chunk = decoder.decode(value, {stream: true});
           buffer += chunk;
@@ -131,8 +126,6 @@ export class ChatService {
     prompt: string = ''
   ): Observable<ChatResponse> {
     const responseSubject = new Subject<ChatResponse>();
-    let hasReceivedResponse = false;
-    let timeoutId: any;
     let accumulatedContent = '';
 
     const requestBody = {
@@ -142,16 +135,6 @@ export class ChatService {
     const headers = this.getAuthHeaders();
 
     console.log('Sending message request:', requestBody);
-
-    timeoutId = setTimeout(() => {
-      if (!hasReceivedResponse) {
-        console.log('Message timeout reached');
-        responseSubject.next({
-          text: "I'm sorry, I couldn't generate a response. Please try again."
-        });
-        responseSubject.complete();
-      }
-    }, this.noResponseTimeout);
 
     fetch(`${this.apiUrl}message`, {
       method: 'POST',
@@ -166,12 +149,9 @@ export class ChatService {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        hasReceivedResponse = true;
-
         this.handleStreamingResponse(
           response,
           responseSubject,
-          timeoutId,
           (jsonData) => {
             if (jsonData.content) {
               accumulatedContent += jsonData.content;
@@ -185,7 +165,6 @@ export class ChatService {
         );
       })
       .catch(error => {
-        clearTimeout(timeoutId);
         console.error('Error in sendMessageStream:', error);
         responseSubject.error(`Error connecting to the model: ${error.message}`);
       });
@@ -195,8 +174,6 @@ export class ChatService {
 
   uploadFile(file: File, prompt: string = ''): Observable<FileUploadResponse> {
     const responseSubject = new Subject<FileUploadResponse>();
-    let hasReceivedResponse = false;
-    let timeoutId: any;
     let accumulatedContent = '';
 
     const formData = new FormData();
@@ -206,16 +183,6 @@ export class ChatService {
     const headers = this.getFileUploadHeaders();
 
     console.log('Uploading file:', file.name, 'with prompt:', prompt);
-
-    timeoutId = setTimeout(() => {
-      if (!hasReceivedResponse) {
-        console.log('Upload timeout reached');
-        responseSubject.next({
-          error: "No response received from the upload service. The file may still be processing."
-        });
-        responseSubject.complete();
-      }
-    }, this.noResponseTimeout);
 
     fetch(`${this.apiUrl}upload`, {
       method: 'POST',
@@ -234,12 +201,9 @@ export class ChatService {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        hasReceivedResponse = true;
-
         this.handleStreamingResponse(
           response,
           responseSubject,
-          timeoutId,
           (jsonData) => {
             console.log('Processing upload JSON data:', jsonData);
 
@@ -270,7 +234,6 @@ export class ChatService {
         );
       })
       .catch(error => {
-        clearTimeout(timeoutId);
         console.error('Error in uploadFile:', error);
         responseSubject.error(`Error uploading file: ${error.message}`);
       });

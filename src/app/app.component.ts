@@ -21,8 +21,8 @@ import { AuthService } from './services/auth.service';
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, OnDestroy {
-  showSignUp = false;
-  showLogin = false;
+  showSignUp = true;
+  showLogin = true;
   isAuthenticated = false;
 
   private loginSuccessListener: any;

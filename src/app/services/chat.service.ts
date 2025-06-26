@@ -2,22 +2,7 @@ import {Injectable} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
 import {environment} from '../../environments/environment';
 import {AuthService} from './auth.service';
-
-export interface Message {
-  role: string;
-  content: string;
-}
-
-export interface ChatResponse {
-  text?: string;
-  content?: string;
-}
-
-export interface FileUploadResponse {
-  url?: string;
-  error?: string;
-  content?: string;
-}
+import {Chat, Message, ChatResponse, FileUploadResponse} from '../Shared/Models';
 
 @Injectable({
   providedIn: 'root',
@@ -26,6 +11,118 @@ export class ChatService {
   private apiUrl = environment.apiUrl;
 
   constructor(private authService: AuthService) {
+  }
+
+  generateUniqueChatTitle(): string {
+    const now = new Date();
+    return `new chat`;
+  }
+
+  createNewChat(title?: string): Observable<Chat> {
+    const responseSubject = new Subject<Chat>();
+
+    const requestBody = {
+      title: this.generateUniqueChatTitle()
+    };
+
+    const headers = this.getAuthHeaders();
+
+    console.log('Creating new chat:', requestBody);
+
+    fetch(`${this.apiUrl}chats`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(requestBody),
+      credentials: 'include'
+    })
+      .then(response => {
+        console.log('Create chat response received:', response.status, response.statusText);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return response.json();
+      })
+      .then(data => {
+        console.log('Chat created:', data);
+        responseSubject.next(data);
+        responseSubject.complete();
+      })
+      .catch(error => {
+        console.error('Error in createNewChat:', error);
+        responseSubject.error(`Error creating chat: ${error.message}`);
+      });
+
+    return responseSubject.asObservable();
+  }
+
+  getUserChats(): Observable<Chat[]> {
+    const responseSubject = new Subject<Chat[]>();
+
+    const headers = this.getAuthHeaders();
+
+    console.log('Getting user chats');
+
+    fetch(`${this.apiUrl}chats`, {
+      method: 'GET',
+      headers: headers,
+      credentials: 'include'
+    })
+      .then(response => {
+        console.log('Get chats response received:', response.status, response.statusText);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return response.json();
+      })
+      .then(data => {
+        console.log('User chats received:', data);
+        responseSubject.next(data);
+        responseSubject.complete();
+      })
+      .catch(error => {
+        console.error('Error in getUserChats:', error);
+        responseSubject.error(`Error getting chats: ${error.message}`);
+      });
+
+    return responseSubject.asObservable();
+  }
+
+  getChatById(chatId: string): Observable<Chat> {
+    const responseSubject = new Subject<Chat>();
+
+    const headers = this.getAuthHeaders();
+
+    console.log('Getting chat by ID:', chatId);
+
+    fetch(`${this.apiUrl}chats/${chatId}`, {
+      method: 'GET',
+      headers: headers,
+      credentials: 'include'
+    })
+      .then(response => {
+        console.log('Get chat response received:', response.status, response.statusText);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return response.json();
+      })
+      .then(data => {
+        console.log('Chat received:', data);
+        responseSubject.next(data);
+        responseSubject.complete();
+      })
+      .catch(error => {
+        console.error('Error in getChatById:', error);
+        responseSubject.error(`Error getting chat: ${error.message}`);
+      });
+
+    return responseSubject.asObservable();
   }
 
   private getAuthHeaders(): Record<string, string> {
@@ -123,13 +220,15 @@ export class ChatService {
 
   sendMessageStream(
     messages: Message[],
-    prompt: string = ''
+    prompt: string = '',
+    chatId?: string | null
   ): Observable<ChatResponse> {
     const responseSubject = new Subject<ChatResponse>();
     let accumulatedContent = '';
 
     const requestBody = {
       message: prompt || (messages.length > 0 ? messages[messages.length - 1].content : ''),
+      chat_id: chatId
     };
 
     const headers = this.getAuthHeaders();
@@ -172,17 +271,20 @@ export class ChatService {
     return responseSubject.asObservable();
   }
 
-  uploadFile(file: File, prompt: string = ''): Observable<FileUploadResponse> {
+  uploadFile(file: File, prompt: string = '', chatId?: string | null): Observable<FileUploadResponse> {
     const responseSubject = new Subject<FileUploadResponse>();
     let accumulatedContent = '';
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('prompt', prompt);
+    if (chatId) {
+      formData.append('chat_id', chatId);
+    }
 
     const headers = this.getFileUploadHeaders();
 
-    console.log('Uploading file:', file.name, 'with prompt:', prompt);
+    console.log('Uploading file:', file.name, 'with prompt:', prompt, 'for chat:', chatId);
 
     fetch(`${this.apiUrl}upload`, {
       method: 'POST',

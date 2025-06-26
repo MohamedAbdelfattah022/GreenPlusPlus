@@ -2,36 +2,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-
-export interface SignupRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface User {
-  email: string;
-  email_confirmed_at: string | null;
-  id: string;
-}
-
-export interface Session {
-  access_token: string | null;
-  refresh_token: string | null;
-  expires_at?: number;
-}
-
-export interface AuthResponse {
-  message: string;
-  access_token: string;
-  user_id: string;
-  session?: Session;
-  user?: User;
-}
+import {SignupRequest, LoginRequest, AuthResponse, Session, User} from '../Shared/Models';
 
 @Injectable({
   providedIn: 'root'

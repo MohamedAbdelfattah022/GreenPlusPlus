@@ -8,7 +8,8 @@ import {
   FileText,
   Activity,
 } from 'lucide-angular';
-import { AuthService, SignupRequest } from '../services/auth.service';
+import { AuthService } from '../services/auth.service';
+import { SignupRequest } from '../Shared/Models';
 
 @Component({
   selector: 'app-sign-up-form',

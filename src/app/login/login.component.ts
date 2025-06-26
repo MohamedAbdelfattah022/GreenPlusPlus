@@ -1,8 +1,9 @@
 ﻿import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService, LoginRequest } from '../services/auth.service';
+import { AuthService } from '../services/auth.service';
 import { LucideAngularModule, Eye } from 'lucide-angular';
+import { LoginRequest } from '../Shared/Models';
 
 @Component({
   selector: 'app-login',

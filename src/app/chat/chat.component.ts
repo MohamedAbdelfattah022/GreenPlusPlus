@@ -4,14 +4,17 @@ import {
   ViewChild,
   ElementRef,
   AfterViewChecked,
-  OnInit
+  OnInit,
+  OnChanges,
+  SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Send, Upload} from 'lucide-angular';
 import { FormsModule } from '@angular/forms';
-import { ChatService, Message } from '../services/chat.service';
+import { ChatService } from '../services/chat.service';
 import { marked } from 'marked';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Message, Chat, ChatMessage  } from '../Shared/Models';
 
 @Component({
   selector: 'app-chat',
@@ -20,7 +23,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css'],
 })
-export class ChatComponent implements AfterViewChecked, OnInit {
+export class ChatComponent implements AfterViewChecked, OnInit, OnChanges {
   @Input() selectedProject: string | null = null;
   @Input() chats: { sender: string; message: string }[] = [];
   @ViewChild('chatContainer') chatContainer!: ElementRef<HTMLDivElement>;
@@ -31,6 +34,8 @@ export class ChatComponent implements AfterViewChecked, OnInit {
   isStreaming: boolean = false;
   currentStreamedMessage: string = '';
   selectedFile: File | null = null;
+  currentChatId: string | null = null;
+  userChats: Chat[] = [];
 
   constructor(
     private chatService: ChatService,
@@ -76,6 +81,64 @@ export class ChatComponent implements AfterViewChecked, OnInit {
         }, 2000);
       }
     };
+
+    // Load user's chats
+    this.loadUserChats();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    // Check if selectedProject has changed and is not the first change
+    if (changes['selectedProject'] && this.selectedProject) {
+      console.log('Selected project changed to:', this.selectedProject);
+      this.selectChat(this.selectedProject);
+    }
+  }
+
+  loadUserChats() {
+    this.chatService.getUserChats().subscribe({
+      next: (chats) => {
+        this.userChats = chats;
+        console.log('User chats loaded:', this.userChats);
+
+        // If there are chats, select the first one
+        if (this.userChats.length > 0 && !this.currentChatId) {
+          this.selectChat(this.userChats[0].id);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading user chats:', error);
+      }
+    });
+  }
+
+  createNewChat() {
+    this.chatService.createNewChat().subscribe({
+      next: (chat) => {
+        console.log('New chat created:', chat);
+        this.userChats.unshift(chat);
+        this.selectChat(chat.id);
+      },
+      error: (error) => {
+        console.error('Error creating new chat:', error);
+      }
+    });
+  }
+
+  selectChat(chatId: string) {
+    this.currentChatId = chatId;
+    this.chatService.getChatById(chatId).subscribe({
+      next: (chat) => {
+        console.log('Chat loaded:', chat);
+        // Convert the chat messages to the format expected by the component
+        this.chats = chat.messages.map(msg => ({
+          sender: msg.sender,
+          message: msg.message
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading chat:', error);
+      }
+    });
   }
 
   sendMessage() {
@@ -94,7 +157,12 @@ export class ChatComponent implements AfterViewChecked, OnInit {
         this.isStreaming = true;
         this.currentStreamedMessage = '';
 
-        this.chatService.uploadFile(this.selectedFile, this.newMessage).subscribe({
+        // If no current chat, create a new one first
+        if (!this.currentChatId) {
+          this.createNewChat();
+        }
+
+        this.chatService.uploadFile(this.selectedFile, this.newMessage, this.currentChatId).subscribe({
           next: (response) => {
             if (response.content) {
               this.currentStreamedMessage = response.content;
@@ -140,7 +208,12 @@ export class ChatComponent implements AfterViewChecked, OnInit {
         this.isStreaming = true;
         this.currentStreamedMessage = '';
 
-        this.chatService.sendMessageStream(messages).subscribe({
+        // If no current chat, create a new one first
+        if (!this.currentChatId) {
+          this.createNewChat();
+        }
+
+        this.chatService.sendMessageStream(messages, this.newMessage, this.currentChatId).subscribe({
           next: (response) => {
             if (response.content) {
               this.currentStreamedMessage = response.content;

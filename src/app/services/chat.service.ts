@@ -4,11 +4,17 @@ import {environment} from '../../environments/environment';
 import {AuthService} from './auth.service';
 import {Chat, Message, ChatResponse, FileUploadResponse} from '../Shared/Models';
 
+interface ImageGenerationResponse {
+  imageUrl?: string;
+  error?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class ChatService {
   private apiUrl = environment.apiUrl;
+  private imageUrl = environment.imageUrl;
 
   constructor(private authService: AuthService) {
   }
@@ -266,6 +272,65 @@ export class ChatService {
       .catch(error => {
         console.error('Error in sendMessageStream:', error);
         responseSubject.error(`Error connecting to the model: ${error.message}`);
+      });
+
+    return responseSubject.asObservable();
+  }
+
+  generateImage(prompt: string, chatId?: string | null): Observable<ImageGenerationResponse> {
+    const responseSubject = new Subject<ImageGenerationResponse>();
+
+    const requestBody = {
+      prompt: prompt,
+      chat_id: chatId
+    };
+
+    const headers = this.getAuthHeaders();
+
+    console.log('Generating image with prompt:', prompt, 'for chat:', chatId);
+
+    fetch(`${this.imageUrl}generate_image`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(requestBody),
+      credentials: 'include'
+    })
+      .then(response => {
+        console.log('Image generation response received:', response.status, response.statusText);
+        console.log('Content-Type:', response.headers.get('content-type'));
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const contentType = response.headers.get('content-type');
+
+        if (contentType && contentType.includes('image/')) {
+          return response.blob().then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            return { imageUrl };
+          });
+        } else {
+          return response.json().then(data => {
+            console.log('Image generation JSON data:', data);
+            if (data.image_url) {
+              return { imageUrl: data.image_url };
+            } else if (data.error) {
+              return { error: data.error };
+            } else {
+              return data;
+            }
+          });
+        }
+      })
+      .then(data => {
+        console.log('Image generation data received:', data);
+        responseSubject.next(data);
+        responseSubject.complete();
+      })
+      .catch(error => {
+        console.error('Error in generateImage:', error);
+        responseSubject.error(`Error generating image: ${error.message}`);
       });
 
     return responseSubject.asObservable();

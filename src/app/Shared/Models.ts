@@ -30,6 +30,7 @@ export interface AuthResponse {
 
 
 export interface ChatMessage {
+  image_url: boolean;
   message: string;
   sender: string;
   timestamp: string;

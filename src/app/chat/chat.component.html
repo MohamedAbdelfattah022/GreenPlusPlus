@@ -79,11 +79,23 @@
 
         <button
           (click)="fileInput.click()"
-          class="absolute right-12 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
+          class="absolute right-24 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
           [disabled]="isStreaming"
           [class.opacity-50]="isStreaming"
         >
           <lucide-icon [name]="Upload" size="20"></lucide-icon>
+        </button>
+
+        <button
+          (click)="toggleImageGeneration()"
+          class="absolute right-12 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
+          [disabled]="isStreaming"
+          [class.opacity-50]="isStreaming"
+          [class.text-green-600]="generateImage"
+          [class.hover:text-green-700]="generateImage"
+          title="Generate image"
+        >
+          <lucide-icon [name]="Image" size="20"></lucide-icon>
         </button>
 
         <button

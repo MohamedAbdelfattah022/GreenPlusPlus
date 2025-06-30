@@ -9,12 +9,13 @@ import {
   SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Send, Upload} from 'lucide-angular';
+import { LucideAngularModule, Send, Upload, Image} from 'lucide-angular';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../services/chat.service';
 import { marked } from 'marked';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Message, Chat, ChatMessage  } from '../Shared/Models';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-chat',
@@ -31,11 +32,13 @@ export class ChatComponent implements AfterViewChecked, OnInit, OnChanges {
   newMessage: string = '';
   readonly Send = Send;
   readonly Upload = Upload;
+  readonly Image = Image;
   isStreaming: boolean = false;
   currentStreamedMessage: string = '';
   selectedFile: File | null = null;
   currentChatId: string | null = null;
   userChats: Chat[] = [];
+  generateImage: boolean = false;
 
   constructor(
     private chatService: ChatService,
@@ -82,12 +85,10 @@ export class ChatComponent implements AfterViewChecked, OnInit, OnChanges {
       }
     };
 
-    // Load user's chats
     this.loadUserChats();
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    // Check if selectedProject has changed and is not the first change
     if (changes['selectedProject'] && this.selectedProject) {
       console.log('Selected project changed to:', this.selectedProject);
       this.selectChat(this.selectedProject);
@@ -100,7 +101,6 @@ export class ChatComponent implements AfterViewChecked, OnInit, OnChanges {
         this.userChats = chats;
         console.log('User chats loaded:', this.userChats);
 
-        // If there are chats, select the first one
         if (this.userChats.length > 0 && !this.currentChatId) {
           this.selectChat(this.userChats[0].id);
         }
@@ -129,11 +129,36 @@ export class ChatComponent implements AfterViewChecked, OnInit, OnChanges {
     this.chatService.getChatById(chatId).subscribe({
       next: (chat) => {
         console.log('Chat loaded:', chat);
-        // Convert the chat messages to the format expected by the component
-        this.chats = chat.messages.map(msg => ({
-          sender: msg.sender,
-          message: msg.message
-        }));
+        this.chats = chat.messages.map(msg => {
+          if (msg.sender === 'AI') {
+            if (msg.message.includes('image_url') || msg.image_url) {
+              try {
+                const data = msg.message ? JSON.parse(msg.message) : {};
+                const imageUrl = data.image_url || msg.image_url;
+                if (imageUrl) {
+                  return {
+                    sender: msg.sender,
+                    message: `<img src="${imageUrl}" alt="Generated image" class="max-w-full rounded-lg">`
+                  };
+                }
+              } catch (e) {
+                if (msg.image_url) {
+                  return {
+                    sender: msg.sender,
+                    message: `<img src="${msg.image_url}" alt="Generated image" class="max-w-full rounded-lg">`
+                  };
+                }
+                console.log('Message is not JSON or does not contain image_url:', msg.message);
+              }
+            }
+          }
+
+          return {
+            sender: msg.sender,
+            message: msg.message
+          };
+        });
+        setTimeout(() => this.scrollToBottom(), 10);
       },
       error: (error) => {
         console.error('Error loading chat:', error);
@@ -157,7 +182,6 @@ export class ChatComponent implements AfterViewChecked, OnInit, OnChanges {
         this.isStreaming = true;
         this.currentStreamedMessage = '';
 
-        // If no current chat, create a new one first
         if (!this.currentChatId) {
           this.createNewChat();
         }
@@ -189,6 +213,44 @@ export class ChatComponent implements AfterViewChecked, OnInit, OnChanges {
             setTimeout(() => this.scrollToBottom(), 100);
           },
         });
+      } else if (this.generateImage) {
+        this.chats.push({
+          sender: 'User',
+          message: this.newMessage,
+        });
+
+        this.chats.push({
+          sender: 'AI',
+          message: 'Generating image...',
+        });
+
+        this.isStreaming = true;
+
+        if (!this.currentChatId) {
+          this.createNewChat();
+        }
+
+        this.chatService.generateImage(this.newMessage, this.currentChatId).subscribe({
+          next: (response) => {
+            if (response.imageUrl) {
+              const imageHtml = `<img src="${response.imageUrl}" alt="Generated image" class="max-w-full rounded-lg">`;
+              this.chats[this.chats.length - 1].message = imageHtml;
+            } else if (response.error) {
+              this.chats[this.chats.length - 1].message = `Error generating image: ${response.error}`;
+            }
+            setTimeout(() => this.scrollToBottom(), 10);
+          },
+          error: (error) => {
+            console.error('Error generating image:', error);
+            this.chats[this.chats.length - 1].message = `Error generating image: ${error}`;
+            this.isStreaming = false;
+          },
+          complete: () => {
+            this.isStreaming = false;
+            this.generateImage = false;
+            setTimeout(() => this.scrollToBottom(), 100);
+          },
+        });
       } else {
         this.chats.push({
           sender: 'User',
@@ -208,7 +270,6 @@ export class ChatComponent implements AfterViewChecked, OnInit, OnChanges {
         this.isStreaming = true;
         this.currentStreamedMessage = '';
 
-        // If no current chat, create a new one first
         if (!this.currentChatId) {
           this.createNewChat();
         }
@@ -265,6 +326,10 @@ export class ChatComponent implements AfterViewChecked, OnInit, OnChanges {
 
   clearSelectedFile() {
     this.selectedFile = null;
+  }
+
+  toggleImageGeneration() {
+    this.generateImage = !this.generateImage;
   }
 
   private isAcceptedFileType(file: File): boolean {

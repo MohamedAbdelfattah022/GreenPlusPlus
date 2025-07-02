@@ -8,14 +8,14 @@ import {
   OnChanges,
   SimpleChanges
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Send, Upload, Image} from 'lucide-angular';
-import { FormsModule } from '@angular/forms';
-import { ChatService } from '../services/chat.service';
-import { marked } from 'marked';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { Message, Chat, ChatMessage  } from '../Shared/Models';
-import { environment } from '../../environments/environment';
+import {CommonModule} from '@angular/common';
+import {LucideAngularModule, Send, Upload, Image} from 'lucide-angular';
+import {FormsModule} from '@angular/forms';
+import {ChatService} from '../services/chat.service';
+import {marked} from 'marked';
+import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
+import {Message, Chat, ChatMessage} from '../Shared/Models';
+import {environment} from '../../environments/environment';
 
 @Component({
   selector: 'app-chat',
@@ -43,7 +43,8 @@ export class ChatComponent implements AfterViewChecked, OnInit, OnChanges {
   constructor(
     private chatService: ChatService,
     private sanitizer: DomSanitizer
-  ) {}
+  ) {
+  }
 
   ngAfterViewChecked() {
     this.scrollToBottom();
@@ -339,10 +340,13 @@ export class ChatComponent implements AfterViewChecked, OnInit, OnChanges {
       'image/png',
       'image/jpeg',
       'image/jpg',
+      'text/csv',
+      'application/vnd.ms-excel',
     ];
     return (
       acceptedTypes.includes(file.type) ||
-      (file.name.endsWith('.idf') && file.type === '')
+      (file.name.endsWith('.idf') && file.type === '') ||
+      (file.name.endsWith('.csv') && file.type === '')
     );
   }
 
